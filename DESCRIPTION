@@ -1,0 +1,25 @@
+Package: DoublyRobustHD
+Type: Package
+Title: Doubly robust estimators with a high-dimensional set of confounders
+Version: 0.0.0.9000
+Date: 2018-05-15
+Author: Joseph Antonelli
+Maintainer: Joseph Antonelli <jantonelli111@gmail.com>
+Description: FILL
+License: GPL (>= 2)
+LazyData: TRUE
+URL: https://github.com/jantonelli111/DoublyRobustHD
+BugReports: https://github.com/jantonelli111/DoublyRobustHD/issues
+RoxygenNote: 5.0.1
+Suggests:
+    ggplot2,
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr
+Imports:
+    mvtnorm,
+    statmod,
+    truncnorm,
+    splines
+
