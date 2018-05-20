@@ -1043,7 +1043,7 @@ GPTreatmentMCMC = function(t, x, band = 1, type="continuous",
 
 DRmcmcCut = function(y, t, x, whichCat,
                      nChains, totalScans, PostT, PostY,
-                     modY = "GP", modT = "GP",
+                     modY = "GP", modT = "GP", y_type="continuous",
                      dfY = NULL, dfT = NULL, nBoot = 100,
                      lower=0.05, upper=0.95) {
 
@@ -1147,19 +1147,38 @@ DRmcmcCut = function(y, t, x, whichCat,
 
       if (modY == "GP") {
         if (length(whichCat) > 0) {
-          muHat1 = cbind(rep(1,n), rep(1,n), xCat2) %*% betaYPost[nc,ni,] +
-            apply(fYPost[nc,ni,,], 1, sum)
-          muHat0 = cbind(rep(1,n), rep(0,n), xCat2) %*% betaYPost[nc,ni,] +
-            apply(fYPost[nc,ni,,], 1, sum)
+          if (y_type == "continuous") {
+            muHat1 = cbind(rep(1,n), rep(1,n), xCat2) %*% betaYPost[nc,ni,] +
+              apply(fYPost[nc,ni,,], 1, sum)
+            muHat0 = cbind(rep(1,n), rep(0,n), xCat2) %*% betaYPost[nc,ni,] +
+              apply(fYPost[nc,ni,,], 1, sum)
+          } else {
+            muHat1 = pnorm(cbind(rep(1,n), rep(1,n), xCat2) %*% betaYPost[nc,ni,] +
+              apply(fYPost[nc,ni,,], 1, sum))
+            muHat0 = pnorm(cbind(rep(1,n), rep(0,n), xCat2) %*% betaYPost[nc,ni,] +
+              apply(fYPost[nc,ni,,], 1, sum))
+          }
         } else {
-          muHat1 = cbind(rep(1,n), rep(1,n)) %*% betaYPost[nc,ni,] +
-            apply(fYPost[nc,ni,,], 1, sum)
-          muHat0 = cbind(rep(1,n), rep(0,n)) %*% betaYPost[nc,ni,] +
-            apply(fYPost[nc,ni,,], 1, sum)
+          if (y_type == "continuous") {
+            muHat1 = cbind(rep(1,n), rep(1,n)) %*% betaYPost[nc,ni,] +
+              apply(fYPost[nc,ni,,], 1, sum)
+            muHat0 = cbind(rep(1,n), rep(0,n)) %*% betaYPost[nc,ni,] +
+              apply(fYPost[nc,ni,,], 1, sum)
+          } else {
+            muHat1 = pnorm(cbind(rep(1,n), rep(1,n)) %*% betaYPost[nc,ni,] +
+              apply(fYPost[nc,ni,,], 1, sum))
+            muHat0 = pnorm(cbind(rep(1,n), rep(0,n)) %*% betaYPost[nc,ni,] +
+              apply(fYPost[nc,ni,,], 1, sum))
+          }
         }
       } else {
-        muHat1 = cbind(rep(1,n), rep(1,n), designY[,-c(1,2)]) %*% betaYPost[nc,ni,]
-        muHat0 = cbind(rep(1,n), rep(0,n), designY[,-c(1,2)]) %*% betaYPost[nc,ni,]
+        if (y_type == "continuous") {
+          muHat1 = cbind(rep(1,n), rep(1,n), designY[,-c(1,2)]) %*% betaYPost[nc,ni,]
+          muHat0 = cbind(rep(1,n), rep(0,n), designY[,-c(1,2)]) %*% betaYPost[nc,ni,]
+        } else {
+          muHat1 = pnorm(cbind(rep(1,n), rep(1,n), designY[,-c(1,2)]) %*% betaYPost[nc,ni,])
+          muHat0 = pnorm(cbind(rep(1,n), rep(0,n), designY[,-c(1,2)]) %*% betaYPost[nc,ni,])
+        }
       }
 
       eHat[eHat < lower] = lower
@@ -1194,19 +1213,38 @@ DRmcmcCut = function(y, t, x, whichCat,
 
         if (modY == "GP") {
           if (length(whichCat) > 0) {
-            muHat1 = cbind(rep(1,n), rep(1,n), xCat2[samp,]) %*% betaYPost[nc,ni,] +
-              apply(fYPost[nc,ni,,], 1, sum)[samp]
-            muHat0 = cbind(rep(1,n), rep(0,n), xCat2[samp,]) %*% betaYPost[nc,ni,] +
-              apply(fYPost[nc,ni,,], 1, sum)[samp]
+            if (y_type == "continuous") {
+              muHat1 = cbind(rep(1,n), rep(1,n), xCat2[samp,]) %*% betaYPost[nc,ni,] +
+                apply(fYPost[nc,ni,,], 1, sum)[samp]
+              muHat0 = cbind(rep(1,n), rep(0,n), xCat2[samp,]) %*% betaYPost[nc,ni,] +
+                apply(fYPost[nc,ni,,], 1, sum)[samp]
+            } else {
+              muHat1 = pnorm(cbind(rep(1,n), rep(1,n), xCat2[samp,]) %*% betaYPost[nc,ni,] +
+                apply(fYPost[nc,ni,,], 1, sum)[samp])
+              muHat0 = pnorm(cbind(rep(1,n), rep(0,n), xCat2[samp,]) %*% betaYPost[nc,ni,] +
+                apply(fYPost[nc,ni,,], 1, sum)[samp])
+            }
           } else {
+            if (y_type == "continuous") {
             muHat1 = cbind(rep(1,n), rep(1,n)) %*% betaYPost[nc,ni,] +
               apply(fYPost[nc,ni,,], 1, sum)[samp]
             muHat0 = cbind(rep(1,n), rep(0,n)) %*% betaYPost[nc,ni,] +
               apply(fYPost[nc,ni,,], 1, sum)[samp]
+            } else {
+              muHat1 = pnorm(cbind(rep(1,n), rep(1,n)) %*% betaYPost[nc,ni,] +
+                apply(fYPost[nc,ni,,], 1, sum)[samp])
+              muHat0 = pnorm(cbind(rep(1,n), rep(0,n)) %*% betaYPost[nc,ni,] +
+                apply(fYPost[nc,ni,,], 1, sum)[samp])
+            }
           }
         } else {
-          muHat1 = cbind(rep(1,n), rep(1,n), designY[samp,-c(1,2)]) %*% betaYPost[nc,ni,]
-          muHat0 = cbind(rep(1,n), rep(0,n), designY[samp,-c(1,2)]) %*% betaYPost[nc,ni,]
+          if (y_type == "continuous") {
+            muHat1 = cbind(rep(1,n), rep(1,n), designY[samp,-c(1,2)]) %*% betaYPost[nc,ni,]
+            muHat0 = cbind(rep(1,n), rep(0,n), designY[samp,-c(1,2)]) %*% betaYPost[nc,ni,]
+          } else {
+            muHat1 = pnorm(cbind(rep(1,n), rep(1,n), designY[samp,-c(1,2)]) %*% betaYPost[nc,ni,])
+            muHat0 = pnorm(cbind(rep(1,n), rep(0,n), designY[samp,-c(1,2)]) %*% betaYPost[nc,ni,])
+          }
         }
 
         eHat[eHat < lower] = lower
@@ -1331,7 +1369,6 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
 
   for (nc in 1 : nChains) {
     for (ni in 1 : totalScans) {
-      if (ni %% 100 == 0 & nc==1) print(ni)
 
       if (modT == "GP") {
         applyT = apply(fTPost[nc,ni,,], 1, sum)
@@ -1352,10 +1389,17 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
         if (length(whichCat) > 0) {
           designY = cbind(designY, xCat2)
         }
-        muHat = designY %*% betaYPost[nc,ni,] +
-          applyY
+        if (y_type == "continuous") {
+          muHat = designY %*% betaYPost[nc,ni,] + applyY
+        } else {
+          muHat = pnorm(designY %*% betaYPost[nc,ni,] + applyY)
+        }
       } else {
-        muHat = cbind(rep(1,n), tMat, designY[,-c(1:(1+dt))]) %*% betaYPost[nc,ni,]
+        if (y_type == "continuous") {
+          muHat = cbind(rep(1,n), tMat, designY[,-c(1:(1+dt))]) %*% betaYPost[nc,ni,]
+        } else {
+          muHat = pnorm(cbind(rep(1,n), tMat, designY[,-c(1:(1+dt))]) %*% betaYPost[nc,ni,])
+        }
         xBetaY = designY[,-c(1:(1+dt))] %*% betaYPost[nc,ni,-c(1:(1+dt))]
       }
 
@@ -1368,21 +1412,39 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
         for (i in 1 : n) {
           pHatA[i] = mean(dnorm(t[i], mean=pHat, sd=pSig))
           if (length(whichCat) > 0) {
-            muHatA[i] = mean(cbind(rep(1,n),
-                                   t(matrix(rep(tMat[i,], n), ncol=n)), xCat2) %*%
-                               betaYPost[nc,ni,] + applyY)
+            if (y_type == "continuous") {
+              muHatA[i] = mean(cbind(rep(1,n),
+                                     t(matrix(rep(tMat[i,], n), ncol=n)), xCat2) %*%
+                                 betaYPost[nc,ni,] + applyY)
+            } else {
+              muHatA[i] = mean(pnorm(cbind(rep(1,n),
+                                           t(matrix(rep(tMat[i,], n), ncol=n)), xCat2) %*%
+                                       betaYPost[nc,ni,] + applyY))
+            }
           } else {
-            muHatA[i] = mean(cbind(rep(1,n),
-                                   t(matrix(rep(tMat[i,], n), ncol=n))) %*%
-                               betaYPost[nc,ni,] + applyY)
+            if (y_type == "continuous") {
+              muHatA[i] = mean(cbind(rep(1,n),
+                                     t(matrix(rep(tMat[i,], n), ncol=n))) %*%
+                                 betaYPost[nc,ni,] + applyY)
+            } else {
+              muHatA[i] = mean(pnorm(cbind(rep(1,n),
+                                           t(matrix(rep(tMat[i,], n), ncol=n))) %*%
+                                       betaYPost[nc,ni,] + applyY))
+            }
           }
         }
       } else {
         for (i in 1 : n) {
           pHatA[i] = mean(dnorm(t[i], mean=pHat, sd=pSig))
-          muHatA[i] = mean(cbind(rep(1, n),
-                                 t(matrix(rep(tMat[i,], n), ncol=n))) %*%
-                             betaYPost[nc,ni,1:(1+dt)] + xBetaY)
+          if (y_type == "continuous") {
+            muHatA[i] = mean(cbind(rep(1, n),
+                                   t(matrix(rep(tMat[i,], n), ncol=n))) %*%
+                               betaYPost[nc,ni,1:(1+dt)] + xBetaY)
+          } else {
+            muHatA[i] = mean(pnorm(cbind(rep(1, n),
+                                         t(matrix(rep(tMat[i,], n), ncol=n))) %*%
+                                     betaYPost[nc,ni,1:(1+dt)] + xBetaY))
+          }
         }
       }
 
@@ -1417,7 +1479,6 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
       }
 
       for (ii in 1 : nBoot) {
-        if (ni %% 10 == 0 & nc==1 & ii==1) print(ni)
 
         if (modT == "GP") {
           if (length(whichCat) > 0) {
@@ -1431,11 +1492,21 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
         }
 
         if (modY == "GP") {
-          muHat = designY[sampList[[ii]],] %*% betaYPost[nc,ni,] +
-            applyY[sampList[[ii]]]
+          if (y_type == "continuous") {
+            muHat = designY[sampList[[ii]],] %*% betaYPost[nc,ni,] +
+              applyY[sampList[[ii]]]
+          } else {
+            muHat = pnorm(designY[sampList[[ii]],] %*% betaYPost[nc,ni,] +
+                            applyY[sampList[[ii]]])
+          }
         } else {
-          muHat = cbind(rep(1,n), tMat[sampList[[ii]],],
-                        designY[sampList[[ii]],-c(1:(1+dt))]) %*% betaYPost[nc,ni,]
+          if (y_type == "continuous") {
+            muHat = cbind(rep(1,n), tMat[sampList[[ii]],],
+                          designY[sampList[[ii]],-c(1:(1+dt))]) %*% betaYPost[nc,ni,]
+          } else {
+            muHat = pnorm(cbind(rep(1,n), tMat[sampList[[ii]],],
+                                designY[sampList[[ii]],-c(1:(1+dt))]) %*% betaYPost[nc,ni,])
+          }
         }
 
         pSig = sqrt(PostT$sigma[nc,ni])
@@ -1447,22 +1518,41 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
           for (i in 1 : n) {
             pHatA[i] = mean(dnorm(t[sampList[[ii]][i]], mean=pHat, sd=pSig))
             if (length(whichCat) > 0) {
-              muHatA[i] = mean(cbind(rep(1,n),
-                                     t(matrix(rep(tMat[sampList[[ii]][i],], n), ncol=n)),
-                                     xCat2[sampList[[ii]],]) %*%
-                                 betaYPost[nc,ni,] + applyY[sampList[[ii]]])
+              if (y_type == "continuous") {
+                muHatA[i] = mean(cbind(rep(1,n),
+                                       t(matrix(rep(tMat[sampList[[ii]][i],], n), ncol=n)),
+                                       xCat2[sampList[[ii]],]) %*%
+                                   betaYPost[nc,ni,] + applyY[sampList[[ii]]])
+              } else {
+                muHatA[i] = mean(pnorm(cbind(rep(1,n),
+                                             t(matrix(rep(tMat[sampList[[ii]][i],], n), ncol=n)),
+                                             xCat2[sampList[[ii]],]) %*%
+                                         betaYPost[nc,ni,] + applyY[sampList[[ii]]]))
+              }
             } else {
+              if (y_type == "continuous") {
               muHatA[i] = mean(cbind(rep(1,n),
                                      t(matrix(rep(tMat[sampList[[ii]][i],], n), ncol=n))) %*%
                                  betaYPost[nc,ni,] + applyY[sampList[[ii]]])
+              } else {
+                muHatA[i] = mean(pnorm(cbind(rep(1,n),
+                                       t(matrix(rep(tMat[sampList[[ii]][i],], n), ncol=n))) %*%
+                                   betaYPost[nc,ni,] + applyY[sampList[[ii]]]))
+              }
             }
           }
         } else {
           for (i in 1 : n) {
             pHatA[i] = mean(dnorm(t[sampList[[ii]][i]], mean=pHat, sd=pSig))
+            if (y_type == "continuous") {
             muHatA[i] = mean(cbind(rep(1, n),
                                    t(matrix(rep(tMat[sampList[[ii]][i],], n), ncol=n))) %*%
                                betaYPost[nc,ni,1:(1+dt)] + xBetaY[sampList[[ii]]])
+            } else {
+              muHatA[i] = mean(pnorm(cbind(rep(1, n),
+                                     t(matrix(rep(tMat[sampList[[ii]][i],], n), ncol=n))) %*%
+                                 betaYPost[nc,ni,1:(1+dt)] + xBetaY[sampList[[ii]]]))
+            }
           }
         }
 
@@ -1495,147 +1585,6 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
 
   return(l)
 }
-
-
-
-
-RegContinuousEst = function(x, locations=seq(quantile(t, .05), quantile(t, .95), length=20),
-                            whichCat, nChains, totalScans, PostY,
-                            modY = "GP", nBoot = 50,
-                            dfY = NULL) {
-
-  df = dfY
-
-  if (length(whichCat) == 0) {
-    xCont = scale(x)
-    p = dim(x)[2]
-    pCont = p
-    pCat = 0
-    nCatCols = 0
-  } else {
-    p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-    pCat = p - pCont
-
-    lengthCat = c()
-    if (length(whichCat) == 1) {
-      lengthCat[1] = length(unique(xCat))
-    } else {
-      for (j2 in 1 : length(whichCat)) {
-        lengthCat[j2] = length(unique(xCat[,j2]))
-      }
-    }
-    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
-    colsCat = list()
-    colsCat[[1]] = 1:(lengthCat[1]-1)
-
-    if (length(whichCat) == 1) {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
-      }
-    } else {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
-      }
-    }
-
-    if (length(whichCat) > 1) {
-      for (j2 in 2 : length(whichCat)) {
-        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
-        for (j3 in 1 : length(colsCat[[j2]])) {
-          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
-        }
-      }
-    }
-  }
-
-
-  if (modY == "GP") {
-    betaYPost = PostY$beta
-    fYPost = PostY$f
-  } else {
-    betaYPost = PostY$beta
-    designY = scale(splines::ns(xCont[,1], dfY))
-
-    for (j in 2 : pCont) {
-      tempY = scale(splines::ns(xCont[,j], dfY))
-      designY = cbind(designY, tempY)
-    }
-
-    if (length(whichCat) > 0) {
-      designY = cbind(designY, xCat2)
-    }
-  }
-
-  nLocations = length(locations)
-
-  POUT = array(NA, dim=c(nChains, totalScans, nLocations))
-
-  for (nc in 1 : nChains) {
-    for (ni in 1 : totalScans) {
-      for (nl in 1 : nLocations) {
-        tempT = locations[nl]
-        tempTmat = t(matrix(rep(c(tempT, tempT^2, tempT^3), n), ncol=n))
-
-        if (modY == "GP") {
-          if (length(whichCat) == 0) {
-            POUT[nc,ni,nl] = mean(cbind(rep(1, n), tempTmat) %*% betaYPost[nc,ni,] +
-                                    apply(fYPost[nc,ni,,], 1, sum))
-          } else {
-            POUT[nc,ni,nl] = mean(cbind(rep(1, n), tempTmat, xCat2) %*% betaYPost[nc,ni,] +
-                                    apply(fYPost[nc,ni,,], 1, sum))
-          }
-        } else {
-          totalMat = cbind(rep(1, n), tempTmat, designY)
-          POUT[nc,ni,nl] = mean(totalMat %*% betaYPost[nc,ni,])
-        }
-      }
-    }
-  }
-
-
-  POUTboot = array(NA, dim=c(nBoot, nChains, totalScans, nLocations))
-
-  for (nb in 1 : nBoot) {
-    samp = sample(1:n, n, replace=TRUE)
-    for (nc in 1 : nChains) {
-      for (ni in 1 : totalScans) {
-        for (nl in 1 : nLocations) {
-          tempT = locations[nl]
-          tempTmat = t(matrix(rep(c(tempT, tempT^2, tempT^3), n), ncol=n))
-
-          if (modY == "GP") {
-            if (length(whichCat) == 0) {
-              POUTboot[nb,nc,ni,nl] = mean(cbind(rep(1, n), tempTmat) %*% betaYPost[nc,ni,] +
-                                             apply(fYPost[nc,ni,,], 1, sum)[samp])
-            } else {
-              POUTboot[nb,nc,ni,nl] = mean(cbind(rep(1, n), tempTmat, xCat2[samp,]) %*% betaYPost[nc,ni,] +
-                                             apply(fYPost[nc,ni,,], 1, sum)[samp])
-            }
-          } else {
-            totalMat = cbind(rep(1, n), tempTmat, designY[samp,])
-            POUTboot[nb,nc,ni,nl] = mean(totalMat %*% betaYPost[nc,ni,])
-          }
-        }
-      }
-    }
-  }
-
-  est = apply(POUT, 3, mean)
-  se = apply(POUTboot, 4, sd)
-  CIlower = apply(POUTboot, 4, quantile, .025)
-  CIupper = apply(POUTboot, 4, quantile, .975)
-
-  return(list(est=est, se=se, CIlower=CIlower, CIupper=CIupper))
-}
-
-
-
-
-
 
 
 WAICoutcome = function(y, x, tMat, Post, whichCat,
