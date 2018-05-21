@@ -1272,7 +1272,7 @@ DRmcmcCut = function(y, t, x, whichCat,
 DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
                                locations=seq(quantile(t, .05), quantile(t, .95), length=20),
                                nChains, totalScans, PostT, PostY,
-                               modY = "GP", modT = "GP",
+                               modY = "GP", modT = "GP", y_type="continuous",
                                dfY = NULL, dfT = NULL, nBoot = 100, threshold=0.1) {
 
 

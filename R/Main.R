@@ -181,7 +181,8 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
 #' est = DRbayesER(y=y, t=t, x=x, nScans=2000, nBurn=1000, thin=2)
 
 DRbayesER = function(nScans = 20000, nBurn = 10000, thin = 10,
-                   y, x, t, locations = seq(min(t), max(t), length=20),
+                   y, x, t, locations = seq(quantile(t, .05), 
+                                            quantile(t, .95), length=20),
                    whichCat = c(), y_type = "continuous",
                    dfY = 1, dfT = 1, band = 3,
                    thetaA = 1, thetaB = 0.2*dim(x)[2],

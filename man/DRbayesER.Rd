@@ -5,9 +5,9 @@
 \title{Estimate causal exposure response curve using a doubly robust estimator in high dimensions}
 \usage{
 DRbayesER(nScans = 20000, nBurn = 10000, thin = 10, y, x, t,
-  locations = seq(min(t), max(t), length = 20), whichCat = c(),
-  y_type = "continuous", dfY = 1, dfT = 1, band = 3, thetaA = 1,
-  thetaB = 0.2 * dim(x)[2], nBoot = 500, threshold = 1e-05)
+  locations = seq(quantile(t, 0.05), quantile(t, 0.95), length = 20),
+  whichCat = c(), y_type = "continuous", dfY = 1, dfT = 1, band = 3,
+  thetaA = 1, thetaB = 0.2 * dim(x)[2], nBoot = 500, threshold = 1e-05)
 }
 \arguments{
 \item{nScans}{The number of MCMC scans to run}
