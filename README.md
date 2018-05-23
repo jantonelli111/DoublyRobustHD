@@ -13,7 +13,7 @@ install_github(repo = "jantonelli111/DoublyRobustHD")
 library(DoublyRobustHD)
 ```
 
-and a simple example on how to use it is below:
+A simple example on how to use the package for binary treatments is below:
 
 ```{r, eval=TRUE}
 n = 200
@@ -23,6 +23,22 @@ t = rbinom(n, 1, p=pnorm(0.7*x[,1] + 0.3*x[,2]))
 y = rnorm(n, mean=t + 0.3*x[,1] + 0.6*x[,2] + 0.5*x[,3], sd=1)
 
 est = DRbayes(y=y, t=t, x=x, nScans=2000, nBurn=1000, thin=2)
+```
+
+And for continuous treatments, estimating the entire ER curve:
+
+```{r, eval=TRUE}
+n = 200
+p = 20
+x = matrix(rnorm(n*p), n, p)
+t <- 0.6*x[,1] + 0.6*x[,2] + rnorm(n)
+y <- 5 + 0.05*t^3 - 0.1*t^2 + 0.5*x[,1] + 0.5*x[,2] + rnorm(n)
+
+est = DRbayesER(y=y, t=t, x=x, nScans=2000, nBurn=1000, thin=2)
+
+plot(est$TreatEffect, type='l', lwd=2, ylim=c(2,9))
+lines(est$TreatEffectCI[,1], lwd=2, lty=2)
+lines(est$TreatEffectCI[,2], lwd=2, lty=2)
 ```
 
 A more detailed vignette is currently being written and will be available by the end of May.
