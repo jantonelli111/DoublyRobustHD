@@ -116,7 +116,6 @@ CreateDesigns = function(x, whichCat, df, GP=FALSE) {
     nCatCols = dim(xCat2)[2]
   }
   
-  
   l = list(p=p, pCont=pCont, pCat=pCat,
            xCont=xCont, xCat2=xCat2, cols=cols,
            colsCat = colsCat, nCatCols=nCatCols)
