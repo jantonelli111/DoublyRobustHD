@@ -67,6 +67,7 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
     stop("t must be binary for this function")
   } else {
 
+    print("Fitting the outcome model now")
     if (dfY == "GP") {
       modY = "GP"
       dfY = NULL
@@ -84,6 +85,7 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
                            totalScans = totalScans)
     }
 
+    print("Fitting the treatment model now")
     if (dfT == "GP") {
       modT = "GP"
       dfT = NULL
@@ -101,6 +103,7 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
                             totalScans = totalScans)
     }
 
+    print("Calculating DR estimates and credible intervals using the bootstrap")
     DR = DRmcmcCut(y=y, t=t, x=x, lower=lower, upper=upper,
                    nChains = 2, totalScans = totalScans, whichCat=whichCat,
                    PostT = PostT, PostY = PostY, modY = modY,
@@ -203,6 +206,7 @@ DRbayesER = function(nScans = 20000, nBurn = 10000, thin = 10,
     stop("t must be continuous for this function")
   } else {
     
+    print("Fitting the outcome model now")
     if (dfY == "GP") {
       modY = "GP"
       dfY = NULL
@@ -220,6 +224,7 @@ DRbayesER = function(nScans = 20000, nBurn = 10000, thin = 10,
                           totalScans = totalScans)
     }
     
+    print("Fitting the treatment model now")
     if (dfT == "GP") {
       modT = "GP"
       dfT = NULL
@@ -237,6 +242,7 @@ DRbayesER = function(nScans = 20000, nBurn = 10000, thin = 10,
                             totalScans = totalScans)
     }
     
+    print("Calculating DR estimates and credible intervals using the bootstrap")
     DR = DRmcmcContinuousCut(y=y, t=t, tMat=tMat, x=x, tMatNew=tMatNew,
                              nChains = 2, totalScans = totalScans, whichCat=whichCat,
                              PostT = PostT, PostY = PostY, modY = modY,

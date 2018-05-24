@@ -2,38 +2,30 @@
 ######################## MCMC functions #########################
 #################################################################
 
-SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
-                             nBurn=1000, nScans=5000,
-                             thin=4, nChains=2, a=0.001, b=0.001,
-                             c=2, d=dim(x)[2], e=0.5, f=0.5) {
-
-  ## creating design matrices for categorical variables
-
-  if (is.vector(tMat) == TRUE) {
-    dt = 1
-  } else {
-    dt = dim(tMat)[2]
-  }
-
+CreateDesigns = function(x, whichCat, df, GP=FALSE) {
   if (length(whichCat) == 0) {
     xCont = scale(x)
     p = dim(x)[2]
+    pCat = 0
     pCont = p
-    cols = list()
-    for (j in 1 : pCont) {
-      cols[[j]] = ((j-1)*df + 1):(j*df)
+    if (GP == TRUE) {
+      cols = NULL
+    } else {
+      cols = list()
+      for (j in 1 : pCont) {
+        cols[[j]] = ((j-1)*df + 1):(j*df)
+      } 
     }
-  } else {
+    xCat2 = NULL
+    nCatCols = 0
+    colsCat = NULL
+  } else if (length(whichCat) == dim(x)[2]) {
     p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-
+    xCat = x
+    xCont = NULL
+    pCont = 0
+    pCat = p - pCont
     lengthCat = c()
-    cols = list()
-    for (j in 1 : pCont) {
-      cols[[j]] = ((j-1)*df + 1):(j*df)
-    }
 
     if (length(whichCat) == 1) {
       lengthCat[1] = length(unique(xCat))
@@ -43,10 +35,10 @@ SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
       }
     }
     xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
+    
     colsCat = list()
     colsCat[[1]] = 1:(lengthCat[1]-1)
-
+    
     if (length(whichCat) == 1) {
       for (j3 in 1 : length(colsCat[[1]])) {
         xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
@@ -56,7 +48,7 @@ SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
         xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
       }
     }
-
+    
     if (length(whichCat) > 1) {
       for (j2 in 2 : length(whichCat)) {
         colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
@@ -65,10 +57,93 @@ SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
         }
       }
     }
-
-    for (j2 in 1 : length(whichCat)) {
-      cols[[pCont + j2]] = colsCat[[j2]] + pCont*df
+    cols = colsCat
+    
+    nCatCols = dim(xCat2)[2]
+  } else {
+    p = dim(x)[2]
+    xCat = x[,whichCat]
+    xCont = scale(x[,-whichCat])
+    pCont = dim(xCont)[2]
+    pCat = p - pCont
+    lengthCat = c()
+    if (GP == TRUE) {
+      cols = NULL
+    } else {
+      cols = list()
+      for (j in 1 : pCont) {
+        cols[[j]] = ((j-1)*df + 1):(j*df)
+      }
     }
+    
+    if (length(whichCat) == 1) {
+      lengthCat[1] = length(unique(xCat))
+    } else {
+      for (j2 in 1 : length(whichCat)) {
+        lengthCat[j2] = length(unique(xCat[,j2]))
+      }
+    }
+    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
+    
+    colsCat = list()
+    colsCat[[1]] = 1:(lengthCat[1]-1)
+    
+    if (length(whichCat) == 1) {
+      for (j3 in 1 : length(colsCat[[1]])) {
+        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
+      }
+    } else {
+      for (j3 in 1 : length(colsCat[[1]])) {
+        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
+      }
+    }
+    
+    if (length(whichCat) > 1) {
+      for (j2 in 2 : length(whichCat)) {
+        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
+        for (j3 in 1 : length(colsCat[[j2]])) {
+          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
+        }
+      }
+    }
+    
+    if (GP == FALSE) {
+      for (j2 in 1 : length(whichCat)) {
+        cols[[pCont + j2]] = colsCat[[j2]] + pCont*df
+      }
+    }
+    
+    nCatCols = dim(xCat2)[2]
+  }
+  
+  
+  l = list(p=p, pCont=pCont, pCat=pCat,
+           xCont=xCont, xCat2=xCat2, cols=cols,
+           colsCat = colsCat, nCatCols=nCatCols)
+  
+  return(l)
+}
+
+SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
+                             nBurn=1000, nScans=5000,
+                             thin=4, nChains=2, a=0.001, b=0.001,
+                             c=2, d=dim(x)[2], e=0.5, f=0.5) {
+
+  ## creating design matrices for categorical variables
+  Designs = CreateDesigns(x=x, whichCat=whichCat, df=df)
+  p = Designs$p
+  pCont = Designs$pCont
+  pCat = Designs$pCat
+  xCont = Designs$xCont
+  xCat2 = Designs$xCat2
+  cols = Designs$cols
+  colsCat = Designs$colsCat
+  nCatCols = Designs$nCatCols
+  
+  if (is.vector(tMat) == TRUE) {
+    dt = 1
+  } else {
+    dt = dim(tMat)[2]
   }
 
   for (j in 1 : p) {
@@ -104,9 +179,11 @@ SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
 
   designY = cbind(rep(1,n), tMat)
 
-  for (j in 1 : pCont) {
-    tempY = scale(splines::ns(xCont[,j], dfY))
-    designY = cbind(designY, tempY)
+  if (pCont > 0) {
+    for (j in 1 : pCont) {
+      tempY = scale(splines::ns(xCont[,j], dfY))
+      designY = cbind(designY, tempY)
+    }
   }
 
   if (length(whichCat) > 0) {
@@ -115,7 +192,7 @@ SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
 
   for (ni in 2 : nScans) {
     for (nc in 1 : nChains) {
-      if (nc == 1 & ni %% 100 == 0) print(ni)
+      if (nc == 1 & ni %% 100 == 0) print(paste(ni, "MCMC scans have finished"))
 
       ################# outcome model ##################
 
@@ -210,61 +287,16 @@ SplineTreatmentMCMC = function(t, x, df,  whichCat, type="continuous",
                                thin=4, nChains=2, a=0.001, b=0.001,
                                c=2, d=dim(x)[2], e=0.5, f=0.5) {
 
-  if (length(whichCat) == 0) {
-    xCont = scale(x)
-    p = dim(x)[2]
-    pCont = p
-    cols = list()
-    for (j in 1 : pCont) {
-      cols[[j]] = ((j-1)*df + 1):(j*df)
-    }
-  } else {
-    p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-
-    lengthCat = c()
-    cols = list()
-    for (j in 1 : pCont) {
-      cols[[j]] = ((j-1)*df + 1):(j*df)
-    }
-
-    if (length(whichCat) == 1) {
-      lengthCat[1] = length(unique(xCat))
-    } else {
-      for (j2 in 1 : length(whichCat)) {
-        lengthCat[j2] = length(unique(xCat[,j2]))
-      }
-    }
-    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
-    colsCat = list()
-    colsCat[[1]] = 1:(lengthCat[1]-1)
-
-    if (length(whichCat) == 1) {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
-      }
-    } else {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
-      }
-    }
-
-    if (length(whichCat) > 1) {
-      for (j2 in 2 : length(whichCat)) {
-        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
-        for (j3 in 1 : length(colsCat[[j2]])) {
-          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
-        }
-      }
-    }
-
-    for (j2 in 1 : length(whichCat)) {
-      cols[[pCont + j2]] = colsCat[[j2]] + pCont*df
-    }
-  }
+  ## creating design matrices for categorical variables
+  Designs = CreateDesigns(x=x, whichCat=whichCat, df=df)
+  p = Designs$p
+  pCont = Designs$pCont
+  pCat = Designs$pCat
+  xCont = Designs$xCont
+  xCat2 = Designs$xCat2
+  cols = Designs$cols
+  colsCat = Designs$colsCat
+  nCatCols = Designs$nCatCols
 
   for (j in 1 : p) {
     cols[[j]] = cols[[j]] + 1
@@ -296,9 +328,11 @@ SplineTreatmentMCMC = function(t, x, df,  whichCat, type="continuous",
 
   designT = cbind(rep(1,n))
 
-  for (j in 1 : pCont) {
-    tempT = scale(splines::ns(xCont[,j], dfT))
-    designT = cbind(designT, tempT)
+  if (pCont > 0) {
+    for (j in 1 : pCont) {
+      tempT = scale(splines::ns(xCont[,j], dfT))
+      designT = cbind(designT, tempT)
+    }
   }
 
   if (length(whichCat) > 0) {
@@ -307,7 +341,7 @@ SplineTreatmentMCMC = function(t, x, df,  whichCat, type="continuous",
 
   for (ni in 2 : nScans) {
     for (nc in 1 : nChains) {
-      if (nc == 1 & ni %% 100 == 0) print(ni)
+      if (nc == 1 & ni %% 100 == 0) print(paste(ni, "MCMC scans have finished"))
 
       ## Update sigma squared
       if (type == "continuous") {
@@ -403,63 +437,30 @@ GPOutcomeMCMC = function(y, tMat, x, band = 1, type="continuous",
                          thin=4, nChains=2, a=0.001, b=0.001,
                          c=2, d=dim(x)[2], e=0.5, f=0.5) {
 
-
+  Designs = CreateDesigns(x=x, whichCat=whichCat, df=NULL, GP=TRUE)
+  p = Designs$p
+  pCont = Designs$pCont
+  pCat = Designs$pCat
+  xCont = Designs$xCont
+  xCat2 = Designs$xCat2
+  cols = Designs$cols
+  colsCat = Designs$colsCat
+  nCatCols = Designs$nCatCols
+  
+  if (pCont == 0) {
+    stop("GP model should not be used with zero continuous covariates")
+  }
+  
   if (is.vector(tMat) == TRUE) {
     dt = 1
   } else {
     dt = dim(tMat)[2]
   }
-
-  if (length(whichCat) == 0) {
-    xCont = scale(x)
-    p = dim(x)[2]
-    pCont = p
-    pCat = 0
-    nCatCols = 0
-  } else {
-    p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-    pCat = p - pCont
-
-    lengthCat = c()
-    if (length(whichCat) == 1) {
-      lengthCat[1] = length(unique(xCat))
-    } else {
-      for (j2 in 1 : length(whichCat)) {
-        lengthCat[j2] = length(unique(xCat[,j2]))
-      }
-    }
-    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
-    colsCat = list()
-    colsCat[[1]] = 1:(lengthCat[1]-1)
-
-    if (length(whichCat) == 1) {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
-      }
-    } else {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
-      }
-    }
-
-    if (length(whichCat) > 1) {
-      for (j2 in 2 : length(whichCat)) {
-        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
-        for (j3 in 1 : length(colsCat[[j2]])) {
-          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
-        }
-      }
-    }
-
+  
+  if (pCat > 0) {
     for (j in 1 : pCat) {
       colsCat[[j]] = colsCat[[j]] + dt + 1
-    }
-
-    nCatCols = dim(xCat2)[2]
+    } 
   }
 
   ## parameters and prior specification
@@ -539,7 +540,7 @@ GPOutcomeMCMC = function(y, tMat, x, band = 1, type="continuous",
 
   for (ni in 2 : nScans) {
     for (nc in 1 : nChains) {
-      if (nc == 1 & ni %% 100 == 0) print(ni)
+      if (nc == 1 & ni %% 100 == 0) print(paste(ni, "MCMC scans have finished"))
 
       ################# outcome model ##################
 
@@ -616,41 +617,41 @@ GPOutcomeMCMC = function(y, tMat, x, band = 1, type="continuous",
                                          f + sum(betaYPost[nc,ni-1,-c(1:(1+dt))]^2)/
                                            (2*sigmaYPost[nc,ni]))
         Group1VarY = sigmaBetaYPost[nc,ni]
-
-
-
+        
+        
+        
         ## Update regression coefficients and variable inclusion parameters
         tempBeta = betaYPost[nc,ni-1,]
         tempBeta[1:(dt+1)] = betaYPost[nc,ni,1:(dt+1)]
-
+        
         for (j in 1 : pCat) {
           tempCols = colsCat[[j]]
-
+          
           PriorSigmaY = Group1VarY*sigmaYPost[nc,ni]*diag(length(tempCols))
           muY = rep(0, length(tempCols))
-
+          
           yStar = Zy - designY[,-tempCols] %*% tempBeta[-tempCols] -
             apply(fYPost[nc,ni-1,,], 1, sum)
-
+          
           ## probability of being in group zero
           p0 = log(1 - wYPost[nc,ni])
-
+          
           ## probability of being in top group
           muVar = solve(t(designY[,tempCols]) %*% designY[,tempCols]  / sigmaYPost[nc,ni] +
                           solve(PriorSigmaY))
           muBeta = muVar %*% (t(designY[,tempCols]) %*% yStar/sigmaYPost[nc,ni] +
                                 solve(PriorSigmaY) %*% muY)
           p1 = log(wYPost[nc,ni]) + mvtnorm::dmvnorm(rep(0, length(tempCols)),
-                                            mean=muY, sigma=PriorSigmaY, log=TRUE) -
+                                                     mean=muY, sigma=PriorSigmaY, log=TRUE) -
             mvtnorm::dmvnorm(rep(0, length(tempCols)), mean=muBeta, sigma=muVar, log=TRUE)
-
+          
           maxlog = max(p0,p1)
-
+          
           p0new = exp(-maxlog + p0)
           p1new = exp(-maxlog + p1)
-
+          
           gammaYPost[nc,ni,j+pCont] = sample(0:1, size=1, p=c(p0new,p1new))
-
+          
           tempBeta[tempCols] = rep(0, length(tempCols))
           if (gammaYPost[nc,ni,j+pCont] == 1) tempBeta[tempCols] = mvtnorm::rmvnorm(1, muBeta, sigma=muVar)
         }
@@ -727,58 +728,26 @@ GPTreatmentMCMC = function(t, x, band = 1, type="continuous",
                            thin=4, nChains=2, a=0.001, b=0.001,
                            c=2, d=dim(x)[2], e=0.5, f=0.5) {
 
-  if (length(whichCat) == 0) {
-    xCont = scale(x)
-    p = dim(x)[2]
-    pCont = p
-    pCat = 0
-    nCatCols = 0
-  } else {
-    p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-    pCat = p - pCont
-
-    lengthCat = c()
-    if (length(whichCat) == 1) {
-      lengthCat[1] = length(unique(xCat))
-    } else {
-      for (j2 in 1 : length(whichCat)) {
-        lengthCat[j2] = length(unique(xCat[,j2]))
-      }
-    }
-    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
-    colsCat = list()
-    colsCat[[1]] = 1:(lengthCat[1]-1)
-
-    if (length(whichCat) == 1) {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
-      }
-    } else {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
-      }
-    }
-
-    if (length(whichCat) > 1) {
-      for (j2 in 2 : length(whichCat)) {
-        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
-        for (j3 in 1 : length(colsCat[[j2]])) {
-          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
-        }
-      }
-    }
-
-    for (j in 1 : pCat) {
+  Designs = CreateDesigns(x=x, whichCat=whichCat, df=NULL, GP=TRUE)
+  p = Designs$p
+  pCont = Designs$pCont
+  pCat = Designs$pCat
+  xCont = Designs$xCont
+  xCat2 = Designs$xCat2
+  cols = Designs$cols
+  colsCat = Designs$colsCat
+  nCatCols = Designs$nCatCols
+  
+  if (pCont == 0) {
+    stop("GP model should not be used with zero continuous covariates")
+  }
+  
+  if (pCat > 0) {
+    for (j in 1 : pCat) { 
       colsCat[[j]] = colsCat[[j]] + 1
     }
-
-    nCatCols = dim(xCat2)[2]
   }
-
+  
   ## parameters and prior specification
 
   n = length(t)
@@ -856,7 +825,7 @@ GPTreatmentMCMC = function(t, x, band = 1, type="continuous",
 
   for (ni in 2 : nScans) {
     for (nc in 1 : nChains) {
-      if (nc == 1 & ni %% 100 == 0) print(ni)
+      if (nc == 1 & ni %% 100 == 0) print(paste(ni, "MCMC scans have finished"))
 
       ################# outcome model ##################
 
@@ -1049,62 +1018,27 @@ DRmcmcCut = function(y, t, x, whichCat,
 
   n = length(t)
 
-  if (length(whichCat) == 0) {
-    xCont = scale(x)
-    p = dim(x)[2]
-    pCont = p
-    pCat = 0
-    nCatCols = 0
-  } else {
-    p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-    pCat = p - pCont
-
-    lengthCat = c()
-    if (length(whichCat) == 1) {
-      lengthCat[1] = length(unique(xCat))
-    } else {
-      for (j2 in 1 : length(whichCat)) {
-        lengthCat[j2] = length(unique(xCat[,j2]))
-      }
-    }
-    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
-    colsCat = list()
-    colsCat[[1]] = 1:(lengthCat[1]-1)
-
-    if (length(whichCat) == 1) {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
-      }
-    } else {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
-      }
-    }
-
-    if (length(whichCat) > 1) {
-      for (j2 in 2 : length(whichCat)) {
-        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
-        for (j3 in 1 : length(colsCat[[j2]])) {
-          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
-        }
-      }
-    }
-  }
-
+  ## We use GP=TRUE regardless here because we only need designs function for xCat2
+  ## and xCont
+  Designs = CreateDesigns(x=x, whichCat=whichCat, df=NULL, GP=TRUE)
+  p = Designs$p
+  pCont = Designs$pCont
+  pCat = Designs$pCat
+  xCont = Designs$xCont
+  xCat2 = Designs$xCat2
+  
   if (modT == "GP") {
     betaTPost = PostT$beta
     fTPost = PostT$f
   } else {
     betaTPost = PostT$beta
     designT = cbind(rep(1,n))
-
-    for (j in 1 : pCont) {
-      tempT = scale(splines::ns(xCont[,j], dfT))
-      designT = cbind(designT, tempT)
+    
+    if (pCont > 0) {
+      for (j in 1 : pCont) {
+        tempT = scale(splines::ns(xCont[,j], dfT))
+        designT = cbind(designT, tempT)
+      }
     }
 
     if (length(whichCat) > 0) {
@@ -1120,10 +1054,13 @@ DRmcmcCut = function(y, t, x, whichCat,
     betaYPost = PostY$beta
     designY = cbind(rep(1,n), t)
 
-    for (j in 1 : pCont) {
-      tempY = scale(splines::ns(xCont[,j], dfY))
-      designY = cbind(designY, tempY)
+    if (pCont > 0) {
+      for (j in 1 : pCont) {
+        tempY = scale(splines::ns(xCont[,j], dfY))
+        designY = cbind(designY, tempY)
+      }
     }
+    
     if (length(whichCat) > 0) {
       designY = cbind(designY, xCat2)
     }
@@ -1284,51 +1221,14 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
     dt = dim(tMat)[2]
   }
 
-  if (length(whichCat) == 0) {
-    xCont = scale(x)
-    p = dim(x)[2]
-    pCont = p
-    pCat = 0
-    nCatCols = 0
-  } else {
-    p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-    pCat = p - pCont
-
-    lengthCat = c()
-    if (length(whichCat) == 1) {
-      lengthCat[1] = length(unique(xCat))
-    } else {
-      for (j2 in 1 : length(whichCat)) {
-        lengthCat[j2] = length(unique(xCat[,j2]))
-      }
-    }
-    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
-    colsCat = list()
-    colsCat[[1]] = 1:(lengthCat[1]-1)
-
-    if (length(whichCat) == 1) {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
-      }
-    } else {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
-      }
-    }
-
-    if (length(whichCat) > 1) {
-      for (j2 in 2 : length(whichCat)) {
-        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
-        for (j3 in 1 : length(colsCat[[j2]])) {
-          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
-        }
-      }
-    }
-  }
+  ## We use GP=TRUE regardless here because we only need designs function for xCat2
+  ## and xCont
+  Designs = CreateDesigns(x=x, whichCat=whichCat, df=NULL, GP=TRUE)
+  p = Designs$p
+  pCont = Designs$pCont
+  pCat = Designs$pCat
+  xCont = Designs$xCont
+  xCat2 = Designs$xCat2
 
   if (modT == "GP") {
     betaTPost = PostT$beta
@@ -1337,9 +1237,11 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
     betaTPost = PostT$beta
     designT = cbind(rep(1,n))
 
-    for (j in 1 : pCont) {
-      tempT = scale(splines::ns(xCont[,j], dfT))
-      designT = cbind(designT, tempT)
+    if (pCont > 0) {
+      for (j in 1 : pCont) {
+        tempT = scale(splines::ns(xCont[,j], dfT))
+        designT = cbind(designT, tempT)
+      }
     }
 
     if (length(whichCat) > 0) {
@@ -1355,9 +1257,11 @@ DRmcmcContinuousCut = function(y, t, tMat, tMatNew, x, whichCat,
     betaYPost = PostY$beta
     designY = cbind(rep(1,n), tMat)
 
-    for (j in 1 : pCont) {
-      tempY = scale(splines::ns(xCont[,j], dfY))
-      designY = cbind(designY, tempY)
+    if (pCont > 0) {
+      for (j in 1 : pCont) {
+        tempY = scale(splines::ns(xCont[,j], dfY))
+        designY = cbind(designY, tempY)
+      }
     }
 
     if (length(whichCat) > 0) {
@@ -1593,58 +1497,29 @@ WAICoutcome = function(y, x, tMat, Post, whichCat,
 
   df = dfY
 
-  if (length(whichCat) == 0) {
-    xCont = scale(x)
-    p = dim(x)[2]
-    pCont = p
-    pCat = 0
-    nCatCols = 0
+  if (modY == "GP") {
+    Designs = CreateDesigns(x=x, whichCat=whichCat, df=NULL, GP=TRUE)
   } else {
-    p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-    pCat = p - pCont
-
-    lengthCat = c()
-    if (length(whichCat) == 1) {
-      lengthCat[1] = length(unique(xCat))
-    } else {
-      for (j2 in 1 : length(whichCat)) {
-        lengthCat[j2] = length(unique(xCat[,j2]))
-      }
-    }
-    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
-    colsCat = list()
-    colsCat[[1]] = 1:(lengthCat[1]-1)
-
-    if (length(whichCat) == 1) {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
-      }
-    } else {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
-      }
-    }
-
-    if (length(whichCat) > 1) {
-      for (j2 in 2 : length(whichCat)) {
-        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
-        for (j3 in 1 : length(colsCat[[j2]])) {
-          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
-        }
-      }
-    }
+    Designs = CreateDesigns(x=x, whichCat=whichCat, df=df)
   }
+  
+  p = Designs$p
+  pCont = Designs$pCont
+  pCat = Designs$pCat
+  xCont = Designs$xCont
+  xCat2 = Designs$xCat2
+  cols = Designs$cols
+  colsCat = Designs$colsCat
+  nCatCols = Designs$nCatCols
 
   if (modY == "Splines") {
     designY = cbind(rep(1, n), tMat)
 
-    for (j in 1 : pCont) {
-      tempY = scale(splines::ns(xCont[,j], dfY))
-      designY = cbind(designY, tempY)
+    if (pCont > 0) {
+      for (j in 1 : pCont) {
+        tempY = scale(splines::ns(xCont[,j], dfY))
+        designY = cbind(designY, tempY)
+      }
     }
 
     if (length(whichCat) > 0) {
@@ -1708,59 +1583,30 @@ WAICtreatment = function(t, x, Post, modT, whichCat,
                          nChains, totalScans) {
 
   df = dfT
-
-  if (length(whichCat) == 0) {
-    xCont = scale(x)
-    p = dim(x)[2]
-    pCont = p
-    pCat = 0
-    nCatCols = 0
+  
+  if (modT == "GP") {
+    Designs = CreateDesigns(x=x, whichCat=whichCat, df=NULL, GP=TRUE)
   } else {
-    p = dim(x)[2]
-    xCat = x[,whichCat]
-    xCont = scale(x[,-whichCat])
-    pCont = dim(xCont)[2]
-    pCat = p - pCont
-
-    lengthCat = c()
-    if (length(whichCat) == 1) {
-      lengthCat[1] = length(unique(xCat))
-    } else {
-      for (j2 in 1 : length(whichCat)) {
-        lengthCat[j2] = length(unique(xCat[,j2]))
-      }
-    }
-    xCat2 = matrix(NA, n, sum(lengthCat) - length(whichCat))
-
-    colsCat = list()
-    colsCat[[1]] = 1:(lengthCat[1]-1)
-
-    if (length(whichCat) == 1) {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat == unique(xCat)[j3])
-      }
-    } else {
-      for (j3 in 1 : length(colsCat[[1]])) {
-        xCat2[,colsCat[[1]][j3]] = as.numeric(xCat[,1] == unique(xCat[,1])[j3])
-      }
-    }
-
-    if (length(whichCat) > 1) {
-      for (j2 in 2 : length(whichCat)) {
-        colsCat[[j2]] = (cumsum(lengthCat-1)[j2-1] + 1) : (cumsum(lengthCat-1)[j2])
-        for (j3 in 1 : length(colsCat[[j2]])) {
-          xCat2[,colsCat[[j2]][j3]] = as.numeric(xCat[,j2] == unique(xCat[,j2])[j3])
-        }
-      }
-    }
+    Designs = CreateDesigns(x=x, whichCat=whichCat, df=df)
   }
+
+  p = Designs$p
+  pCont = Designs$pCont
+  pCat = Designs$pCat
+  xCont = Designs$xCont
+  xCat2 = Designs$xCat2
+  cols = Designs$cols
+  colsCat = Designs$colsCat
+  nCatCols = Designs$nCatCols
 
   if (modT == "Splines") {
     designT = cbind(rep(1, n))
 
-    for (j in 1 : pCont) {
-      tempT = scale(splines::ns(xCont[,j], dfT))
-      designT = cbind(designT, tempT)
+    if (pCont > 0) {
+      for (j in 1 : pCont) {
+        tempT = scale(splines::ns(xCont[,j], dfT))
+        designT = cbind(designT, tempT)
+      }
     }
 
     if (length(whichCat) > 0) {
