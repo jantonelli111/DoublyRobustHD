@@ -97,7 +97,7 @@ Now let's simulate data from a binary outcome
 
 ```{r, eval=FALSE}
 n = 200
-p = 20
+p = 200
 x = matrix(rnorm(n*p), n, p)
 t = rbinom(n, 1, p=pnorm(0.7*x[,1] + 0.3*x[,2]))
 y = rbinom(n, 1, pnorm(0.5*t + 0.7*x[,1] + 0.9*x[,2] + 0.75*x[,3]))
@@ -152,7 +152,7 @@ The last topic to consider now is the estimation of treatment effects with conti
 
 ```{r, eval=FALSE}
 n = 200
-p = 20
+p = 200
 x = matrix(rnorm(n*p), n, p)
 t <- 0.6*x[,1] + 0.6*x[,2] + rnorm(n)
 y <- 5 + 0.05*t^3 - 0.1*t^2 + 0.5*x[,1] + 0.5*x[,2] + rnorm(n)
