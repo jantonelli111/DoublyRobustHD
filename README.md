@@ -159,10 +159,12 @@ y <- 5 + 0.05*t^3 - 0.1*t^2 + 0.5*x[,1] + 0.5*x[,2] + rnorm(n)
 
 est = DRbayesER(y=y, t=t, x=x, nScans=2000, nBurn=1000, thin=2)
 
-plot(est$TreatEffect, type='l', lwd=2, ylim=c(2,9))
+plot(est$TreatEffect, type='l', lwd=2, ylim=c(2,7))
 lines(est$TreatEffectCI[,1], lwd=2, lty=2)
 lines(est$TreatEffectCI[,2], lwd=2, lty=2)
 ```
+
+![Alt text](images/Plot6.png)
 
 **References**
 
