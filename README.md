@@ -148,7 +148,7 @@ print(est)
 
 ## Continuous treatments
 
-The last topic to consider now is the estimation of treatment effects with continuous treatments. Here, we will be estimating 
+The last topic to consider now is the estimation of treatment effects with continuous treatments. Here, we will be estimating the entire exposure response curve, E(Y(t)) where Y(t) is the potential outcome at level t. 
 
 ```{r, eval=FALSE}
 n = 200
