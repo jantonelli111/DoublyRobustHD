@@ -3,6 +3,7 @@
 #################################################################
 
 CreateDesigns = function(x, whichCat, df, GP=FALSE) {
+  n = dim(x)[1]
   if (length(whichCat) == 0) {
     xCont = scale(x)
     p = dim(x)[2]
