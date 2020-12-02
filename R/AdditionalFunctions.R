@@ -136,7 +136,9 @@ SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
   n = length(y)
   
   ## creating design matrices for categorical variables
+  print("Here first")
   Designs = CreateDesigns(x=x, whichCat=whichCat, df=df)
+  print("Made it")
   p = Designs$p
   pCont = Designs$pCont
   pCat = Designs$pCat
