@@ -254,7 +254,8 @@ DRbayesER = function(nScans = 20000, nBurn = 10000, thin = 10,
              TreatEffectSE = DR$se,
              TreatEffectCI = cbind(DR$CIlower, DR$CIupper),
              WAICtreatment = WAICT,
-             WAICoutcome = WAICY)
+             WAICoutcome = WAICY,
+             locations = locations)
     
   }
   
