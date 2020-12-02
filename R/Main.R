@@ -56,8 +56,6 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
                    thetaA = 1, thetaB = 0.2*dim(x)[2],
                    nBoot=500, lower=0, upper=1) {
 
-  print("HI")
-  print(dim(x))
   n = dim(x)[1]
   p = dim(x)[2]
 
@@ -70,7 +68,6 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
   } else {
 
     print("Fitting the outcome model now")
-    print(n)
     if (dfY == "GP") {
       modY = "GP"
       dfY = NULL
@@ -81,7 +78,6 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
                           totalScans = totalScans)
     } else {
       modY = "Splines"
-      print(n)
       PostY = SplineOutcomeMCMC(y=y, tMat=t, x=x, whichCat = whichCat, type=y_type,
                                 df=dfY, nScans=nScans, nBurn=nBurn, thin=thin)
       WAICY = WAICoutcome(y=y, x=x, tMat=t, Post=PostY, modY="Splines", type=y_type,
