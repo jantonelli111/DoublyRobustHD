@@ -5,9 +5,9 @@
 \title{Estimate causal effect using doubly robust estimators in high dimensions}
 \usage{
 DRbayes(nScans = 20000, nBurn = 10000, thin = 10, y, x, t,
-  whichCat = c(), y_type = "continuous", dfY = 1, dfT = 1, band = 3,
-  thetaA = 1, thetaB = 0.2 * dim(x)[2], nBoot = 500, lower = 0,
-  upper = 1)
+  whichCat = c(), y_type = "continuous", dfY = 1, dfT = 1,
+  band = 3, thetaA = 1, thetaB = 0.2 * dim(x)[2], nBoot = 500,
+  lower = 0, upper = 1)
 }
 \arguments{
 \item{nScans}{The number of MCMC scans to run}
@@ -75,4 +75,3 @@ y = rnorm(n, mean=t + 0.3*x[,1] + 0.6*x[,2] + 0.5*x[,3], sd=1)
 
 est = DRbayes(y=y, t=t, x=x, nScans=2000, nBurn=1000, thin=2)
 }
-

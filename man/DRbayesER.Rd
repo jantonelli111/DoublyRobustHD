@@ -6,8 +6,9 @@
 \usage{
 DRbayesER(nScans = 20000, nBurn = 10000, thin = 10, y, x, t,
   locations = seq(quantile(t, 0.05), quantile(t, 0.95), length = 20),
-  whichCat = c(), y_type = "continuous", dfY = 1, dfT = 1, band = 3,
-  thetaA = 1, thetaB = 0.2 * dim(x)[2], nBoot = 500, threshold = 1e-05)
+  whichCat = c(), y_type = "continuous", dfY = 1, dfT = 1,
+  band = 3, thetaA = 1, thetaB = 0.2 * dim(x)[2], nBoot = 500,
+  threshold = 0.00001)
 }
 \arguments{
 \item{nScans}{The number of MCMC scans to run}
@@ -78,4 +79,3 @@ y <- 5 + 0.05*t^3 - 0.1*t^2 + 0.5*x[,1] + 0.5*x[,2] + rnorm(n)
 
 est = DRbayesER(y=y, t=t, x=x, nScans=2000, nBurn=1000, thin=2)
 }
-

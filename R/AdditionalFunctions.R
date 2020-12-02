@@ -1495,6 +1495,8 @@ WAICoutcome = function(y, x, tMat, Post, whichCat,
                        nChains, totalScans) {
 
   df = dfY
+  
+  n = length(y)
 
   if (modY == "GP") {
     Designs = CreateDesigns(x=x, whichCat=whichCat, df=NULL, GP=TRUE)
@@ -1525,8 +1527,6 @@ WAICoutcome = function(y, x, tMat, Post, whichCat,
       designY = cbind(designY, xCat2)
     }
   }
-
-  n = length(y)
 
   LHood = array(NA, dim=c(nChains, totalScans, n))
 
@@ -1581,6 +1581,8 @@ WAICtreatment = function(t, x, Post, modT, whichCat,
                          type="binary", dfT = NULL,
                          nChains, totalScans) {
 
+  n = length(t)
+  
   df = dfT
   
   if (modT == "GP") {
@@ -1612,8 +1614,6 @@ WAICtreatment = function(t, x, Post, modT, whichCat,
       designT = cbind(designT, xCat2)
     }
   }
-
-  n = length(t)
 
   LHood = array(NA, dim=c(nChains, totalScans, n))
 

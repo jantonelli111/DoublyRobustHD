@@ -10,7 +10,7 @@ License: GPL (>= 2)
 LazyData: TRUE
 URL: https://github.com/jantonelli111/DoublyRobustHD
 BugReports: https://github.com/jantonelli111/DoublyRobustHD/issues
-RoxygenNote: 5.0.1
+RoxygenNote: 6.1.1
 Suggests:
     ggplot2,
     knitr,
@@ -22,4 +22,3 @@ Imports:
     statmod,
     truncnorm,
     splines
-
