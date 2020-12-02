@@ -26,7 +26,7 @@
 #' @param thetaA         The first parameter of the beta prior on the overall sparsity level
 #' @param thetaB         The second parameter of the beta prior on the overall sparsity level
 #' @param band           The bandwidth parameter for the gaussian process kernel function
-#' @param nBoot          The number of resampling iterations to use when estimating the credible
+#' @param nBoot          The number of resampling iterations to use when estimating the confidence
 #'                       intervals
 #' @param lower          The lowest value the estimated propensity score can take in the DR estimator. 
 #'                       This parameter defaults to 0 so that the propensity score is not trimmed.
@@ -103,7 +103,7 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
                             totalScans = totalScans)
     }
 
-    print("Calculating DR estimates and credible intervals using the bootstrap")
+    print("Calculating DR estimates and confidence intervals using the bootstrap")
     DR = DRmcmcCut(y=y, t=t, x=x, lower=lower, upper=upper,
                    nChains = 2, totalScans = totalScans, whichCat=whichCat,
                    PostT = PostT, PostY = PostY, modY = modY,
@@ -159,7 +159,7 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
 #' @param thetaA         The first parameter of the beta prior on the overall sparsity level
 #' @param thetaB         The second parameter of the beta prior on the overall sparsity level
 #' @param band           The bandwidth parameter for the gaussian process kernel function
-#' @param nBoot          The number of resampling iterations to use when estimating the credible
+#' @param nBoot          The number of resampling iterations to use when estimating the confidence
 #'                       intervals
 #' @param threshold      The lowest value that the ratio of propensities in the definition of the
 #'                       pseudo outcome used in the continuous doubly robust estimator can take.
@@ -242,7 +242,7 @@ DRbayesER = function(nScans = 20000, nBurn = 10000, thin = 10,
                             totalScans = totalScans)
     }
     
-    print("Calculating DR estimates and credible intervals using the bootstrap")
+    print("Calculating DR estimates and confidence intervals using the bootstrap")
     DR = DRmcmcContinuousCut(y=y, t=t, tMat=tMat, x=x, tMatNew=tMatNew,
                              nChains = 2, totalScans = totalScans, whichCat=whichCat,
                              PostT = PostT, PostY = PostY, modY = modY,

@@ -129,6 +129,8 @@ SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
                              thin=4, nChains=2, a=0.001, b=0.001,
                              c=2, d=dim(x)[2], e=0.5, f=0.5) {
 
+  n = length(y)
+  
   ## creating design matrices for categorical variables
   Designs = CreateDesigns(x=x, whichCat=whichCat, df=df)
   p = Designs$p
@@ -151,8 +153,6 @@ SplineOutcomeMCMC = function(y, tMat, x, whichCat, df, type="continuous",
   }
 
   ## parameters and prior specification
-
-  n = length(y)
 
   ## MCMC details
   dfY = df
@@ -304,7 +304,7 @@ SplineTreatmentMCMC = function(t, x, df,  whichCat, type="continuous",
 
   ## parameters and prior specification
 
-  n = length(y)
+  n = length(t)
 
   ## MCMC details
   dfT = df
@@ -1513,6 +1513,7 @@ WAICoutcome = function(y, x, tMat, Post, whichCat,
   cols = Designs$cols
   colsCat = Designs$colsCat
   nCatCols = Designs$nCatCols
+  
 
   if (modY == "Splines") {
     designY = cbind(rep(1, n), tMat)
