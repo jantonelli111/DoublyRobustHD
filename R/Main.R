@@ -56,6 +56,8 @@ DRbayes = function(nScans = 20000, nBurn = 10000, thin = 10,
                    thetaA = 1, thetaB = 0.2*dim(x)[2],
                    nBoot=500, lower=0, upper=1) {
 
+  print("HI")
+  print(dim(x))
   n = dim(x)[1]
   p = dim(x)[2]
 
