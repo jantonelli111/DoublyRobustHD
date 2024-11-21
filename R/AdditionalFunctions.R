@@ -776,7 +776,7 @@ GPTreatmentMCMC = function(t, x, band = 1, type="continuous",
   gammaTPost[,1,] = 0
 
   for (nc in 1 : nChains) {
-    betaTPost[nc,1,] = c(mean(y), rep(0, nCatCols))
+    betaTPost[nc,1,] = c(mean(t), rep(0, nCatCols))
   }
 
   wTPost[,1] = 0.1
